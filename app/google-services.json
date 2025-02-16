@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640950203693",
+    "project_id": "a202sgi-fe",
+    "storage_bucket": "a202sgi-fe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640950203693:android:5948d5cec2e214a5b28fa4",
+        "android_client_info": {
+          "package_name": "com.example.a202sgi_fe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-zBAY0CfB3R4ydYS5cnBGsFiy2gck0Xw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

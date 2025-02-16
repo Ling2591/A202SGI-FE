@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    id 'com.google.gms.google-services'
+
 }
 
 android {
@@ -8,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.a202sgi_fe"
-        minSdk 21
+        minSdk 23
         targetSdk 35
         versionCode 1
         versionName "1.0"
@@ -35,4 +37,16 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+
+    // Firebase dependencies
+    implementation platform('com.google.firebase:firebase-bom:33.9.0') // Firebase BoM
+    implementation 'com.google.firebase:firebase-analytics' // Firebase Analytics
+    implementation 'com.google.firebase:firebase-auth' // Firebase Authentication
+    implementation 'com.google.firebase:firebase-database' // Firebase Realtime Database
+
+    implementation libs.mpandroidchart
+    implementation libs.opencsv
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+
 }

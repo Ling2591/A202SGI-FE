@@ -30,7 +30,7 @@
 
         <!-- TaskActivity -->
         <activity
-            android:name=".TaskActivity"
+            android:name=".MainActivity"
             android:exported="true" />
 
     </application>
