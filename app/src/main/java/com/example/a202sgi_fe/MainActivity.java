@@ -1,10 +1,11 @@
-// MainActivity.java
+
 package com.example.a202sgi_fe;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -48,7 +49,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
+        // Initialize FirebaseDatabase with the URL
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://a202sgi-fe-default-rtdb.asia-southeast1.firebasedatabase.app/");
+        databaseReference = database.getReference("expenses");
 
         amountEditText = findViewById(R.id.amountEditText);
         categorySpinner = findViewById(R.id.categorySpinner);
@@ -57,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
         addExpenseButton = findViewById(R.id.addExpenseButton);
         expenseListView = findViewById(R.id.expenseListView);
         calendar = Calendar.getInstance();
-        mAuth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
 
         // Set up Category Spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
@@ -91,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
     private void showDatePicker() {
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
@@ -118,21 +118,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addExpense() {
-        Toast.makeText(this, "ADD EXPENSE", Toast.LENGTH_SHORT).show();
-        String amount = amountEditText.getText().toString();
+        String amountStr = amountEditText.getText().toString();
         String category = categorySpinner.getSelectedItem().toString();
         String date = dateEditText.getText().toString();
         String description = descriptionEditText.getText().toString();
 
         // Input validation
-        if (amount.isEmpty() || date.isEmpty() || description.isEmpty()) {
+        if (amountStr.isEmpty() || date.isEmpty() || description.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
         double amountValue;
         try {
-            amountValue = Double.parseDouble(amount);
+            amountValue = Double.parseDouble(amountStr);
             if (amountValue <= 0) {
                 Toast.makeText(this, "Amount must be greater than 0", Toast.LENGTH_SHORT).show();
                 return;
@@ -149,19 +148,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String userId = mAuth.getCurrentUser().getUid();
-        String expenseId = databaseReference.child(userId).push().getKey(); // Firebase generates unique ID
+        DatabaseReference userExpensesRef = databaseReference.child(userId);
+        // Create a new child with a unique ID using push()
+        DatabaseReference newExpenseRef = userExpensesRef.push();
+        String expenseId = newExpenseRef.getKey(); // Get the unique ID
+
+        if (expenseId == null) {
+            Toast.makeText(this, "Failed to generate Expense ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Expense expense = new Expense(expenseId, amountValue, category, date, description);
 
-        databaseReference.child(userId).child(expenseId).setValue(expense)
+        Log.d("FirebaseDebug", "Attempting to add expense: " + expense);
+
+        // Use setValue() on the new unique ID
+        newExpenseRef.setValue(expense)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(this, "Expense Added", Toast.LENGTH_SHORT).show();
                         clearInputs();
                     } else {
                         Toast.makeText(this, "Failed to Add Expense", Toast.LENGTH_SHORT).show();
+                        Log.e("FirebaseError", "Error adding expense", task.getException());
                     }
                 });
+
     }
 
     private void loadExpenses() {
@@ -190,7 +202,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
     private void clearInputs() {
         amountEditText.setText("");
         dateEditText.setText("");

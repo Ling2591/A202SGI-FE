@@ -1,4 +1,4 @@
-// ExpenseAdapter.java
+
 package com.example.a202sgi_fe;
 
 import android.content.Context;
