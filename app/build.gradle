@@ -41,12 +41,16 @@ dependencies {
     // Firebase dependencies
     implementation platform('com.google.firebase:firebase-bom:33.9.0') // Firebase BoM
     implementation 'com.google.firebase:firebase-analytics' // Firebase Analytics
-    implementation 'com.google.firebase:firebase-auth' // Firebase Authentication
-    implementation 'com.google.firebase:firebase-database' // Firebase Realtime Database
+    implementation 'com.google.firebase:firebase-database:20.2.2' // Latest Realtime Database SDK
+    implementation 'com.google.firebase:firebase-auth:22.1.1' // For user authentication
+
 
     implementation libs.mpandroidchart
     implementation libs.opencsv
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 
+
 }
+
+apply plugin: 'com.google.gms.google-services'

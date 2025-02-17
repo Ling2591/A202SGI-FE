@@ -1,13 +1,16 @@
 package com.example.a202sgi_fe;
-
 public class Expense {
-    private int id;
+    private String id;  // Change from int to String
     private double amount;
     private String category;
     private String date;
     private String description;
 
-    public Expense(int id, double amount, String category, String date, String description) {
+    public Expense() {
+        // Empty constructor needed for Firebase
+    }
+
+    public Expense(String id, double amount, String category, String date, String description) {
         this.id = id;
         this.amount = amount;
         this.category = category;
@@ -15,7 +18,7 @@ public class Expense {
         this.description = description;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 

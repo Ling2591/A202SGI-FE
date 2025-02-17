@@ -22,6 +22,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.io.Console;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -44,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAuth = FirebaseAuth.getInstance();
+        databaseReference = FirebaseDatabase.getInstance().getReference("expenses");
 
         amountEditText = findViewById(R.id.amountEditText);
         categorySpinner = findViewById(R.id.categorySpinner);
@@ -113,20 +118,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addExpense() {
+        Toast.makeText(this, "ADD EXPENSE", Toast.LENGTH_SHORT).show();
         String amount = amountEditText.getText().toString();
         String category = categorySpinner.getSelectedItem().toString();
         String date = dateEditText.getText().toString();
         String description = descriptionEditText.getText().toString();
 
-        // Input Validation
+        // Input validation
         if (amount.isEmpty() || date.isEmpty() || description.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Validate Amount (Currency Format)
+        double amountValue;
         try {
-            double amountValue = Double.parseDouble(amount);
+            amountValue = Double.parseDouble(amount);
             if (amountValue <= 0) {
                 Toast.makeText(this, "Amount must be greater than 0", Toast.LENGTH_SHORT).show();
                 return;
@@ -136,10 +142,16 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Save Expense to Firebase
+        // Ensure user is logged in before accessing Firebase
+        if (mAuth.getCurrentUser() == null) {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String userId = mAuth.getCurrentUser().getUid();
-        String expenseId = databaseReference.child(userId).push().getKey();
-        Expense expense = new Expense(expenseId, Double.parseDouble(amount), category, date, description);
+        String expenseId = databaseReference.child(userId).push().getKey(); // Firebase generates unique ID
+
+        Expense expense = new Expense(expenseId, amountValue, category, date, description);
 
         databaseReference.child(userId).child(expenseId).setValue(expense)
                 .addOnCompleteListener(task -> {
@@ -153,6 +165,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadExpenses() {
+        if (mAuth.getCurrentUser() == null) {
+            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String userId = mAuth.getCurrentUser().getUid();
         databaseReference.child(userId).addValueEventListener(new ValueEventListener() {
             @Override
@@ -160,7 +177,9 @@ public class MainActivity extends AppCompatActivity {
                 expenseList.clear();
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     Expense expense = dataSnapshot.getValue(Expense.class);
-                    expenseList.add(expense);
+                    if (expense != null) {
+                        expenseList.add(expense);
+                    }
                 }
                 expenseAdapter.notifyDataSetChanged();
             }
@@ -178,8 +197,7 @@ public class MainActivity extends AppCompatActivity {
         descriptionEditText.setText("");
     }
     // MainActivity.java (continued)
-    private void editExpense(Expense expense) {
-        // Open a dialog to edit the expense
+    public void editExpense(Expense expense) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Edit Expense");
 
@@ -189,56 +207,55 @@ public class MainActivity extends AppCompatActivity {
         EditText dateEditText = view.findViewById(R.id.dateEditText);
         EditText descriptionEditText = view.findViewById(R.id.descriptionEditText);
 
-        // Set current values
         amountEditText.setText(String.valueOf(expense.getAmount()));
         dateEditText.setText(expense.getDate());
         descriptionEditText.setText(expense.getDescription());
 
-        // Set up Category Spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this,
-                R.array.categories,
-                android.R.layout.simple_spinner_item
-        );
+                this, R.array.categories, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
-
-        // Set selected category
-        int position = adapter.getPosition(expense.getCategory());
-        categorySpinner.setSelection(position);
+        categorySpinner.setSelection(adapter.getPosition(expense.getCategory()));
 
         builder.setView(view);
-        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String amount = amountEditText.getText().toString();
-                String category = categorySpinner.getSelectedItem().toString();
-                String date = dateEditText.getText().toString();
-                String description = descriptionEditText.getText().toString();
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String updatedAmount = amountEditText.getText().toString();
+            String updatedCategory = categorySpinner.getSelectedItem().toString();
+            String updatedDate = dateEditText.getText().toString();
+            String updatedDescription = descriptionEditText.getText().toString();
 
-                // Update the expense in Firebase
-                String userId = mAuth.getCurrentUser().getUid();
-                Map<String, Object> updates = new HashMap<>();
-                updates.put("amount", Double.parseDouble(amount));
-                updates.put("category", category);
-                updates.put("date", date);
-                updates.put("description", description);
-
-                databaseReference.child(userId).child(expense.getId()).updateChildren(updates)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                Toast.makeText(MainActivity.this, "Expense Updated", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(MainActivity.this, "Failed to Update Expense", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+            if (updatedAmount.isEmpty() || updatedDate.isEmpty() || updatedDescription.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            double updatedAmountValue = Double.parseDouble(updatedAmount);
+            if (updatedAmountValue <= 0) {
+                Toast.makeText(MainActivity.this, "Amount must be greater than 0", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String userId = mAuth.getCurrentUser().getUid();
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("amount", updatedAmountValue);
+            updates.put("category", updatedCategory);
+            updates.put("date", updatedDate);
+            updates.put("description", updatedDescription);
+
+            databaseReference.child(userId).child(expense.getId()).updateChildren(updates)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(MainActivity.this, "Expense Updated", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "Failed to Update Expense", Toast.LENGTH_SHORT).show();
+                        }
+                    });
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
-    private void deleteExpense(Expense expense) {
+    public void deleteExpense(Expense expense) {
         // Show a confirmation dialog before deleting
         new AlertDialog.Builder(this)
                 .setTitle("Delete Expense")
@@ -247,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String userId = mAuth.getCurrentUser().getUid();
-                        databaseReference.child(userId).child(expense.getId()).removeValue()
+                        databaseReference.child(userId).child(String.valueOf(expense.getId())).removeValue()
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
                                         Toast.makeText(MainActivity.this, "Expense Deleted", Toast.LENGTH_SHORT).show();
