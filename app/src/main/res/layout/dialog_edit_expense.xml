@@ -1,15 +1,16 @@
-<!-- activity_main.xml -->
+<!-- dialog_edit_expense.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:gravity="center"
     android:padding="16dp">
 
     <!-- Amount Input -->
     <EditText
         android:id="@+id/amountEditText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="8mm"
         android:hint="Amount"
         android:inputType="numberDecimal" />
 
@@ -17,14 +18,14 @@
     <Spinner
         android:id="@+id/categorySpinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="8mm"
         android:hint="Select Category" />
 
     <!-- Date Input -->
     <EditText
         android:id="@+id/dateEditText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="8mm"
         android:hint="Select Date"
         android:focusable="false"
         android:clickable="true" />
@@ -33,21 +34,7 @@
     <EditText
         android:id="@+id/descriptionEditText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="8mm"
         android:hint="Description"
         android:inputType="textCapSentences" />
-
-    <!-- Add Expense Button -->
-    <Button
-        android:id="@+id/addExpenseButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add Expense" />
-
-    <!-- ListView to Display Expenses -->
-    <ListView
-        android:id="@+id/expenseListView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
 </LinearLayout>
